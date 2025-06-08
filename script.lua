@@ -1,1 +1,1 @@
-print("hello world from lua!")
+renderText("testing", 100, 200)

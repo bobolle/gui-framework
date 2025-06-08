@@ -4,6 +4,7 @@ extern "C" {
 #include <lualib.h>
 }
 
+#include <string>
 #include <stdio.h>
 #include <stdlib.h>
 #include <GL/gl.h>
@@ -15,6 +16,22 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     {
         glfwSetWindowShouldClose(window, GLFW_TRUE);
     }
+}
+
+static void renderText(const std::string& text, float x, float y)
+{
+    printf("%s\n", text);
+}
+
+int lua_renderText(lua_State* L)
+{
+    const std::string text = luaL_checkstring(L, 1);
+    float x = static_cast<float>(luaL_checknumber(L, 2));
+    float y = static_cast<float>(luaL_checknumber(L, 3));
+
+    renderText(text, x, y);
+
+    return 0;
 }
 
 int main(void)
@@ -36,6 +53,9 @@ int main(void)
         fprintf(stderr, "Couldn't load file: %s\n", lua_tostring(L, -1));
         exit(1);
     }
+
+    // register functions
+    lua_register(L, "renderText", lua_renderText);
 
     // initialize GLFW
     if (!glfwInit())
