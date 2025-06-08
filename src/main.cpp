@@ -6,6 +6,7 @@ extern "C" {
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <GL/gl.h>
 #include <GLFW/glfw3.h>
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -43,8 +44,8 @@ int main(void)
         exit(1);
     }
 
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 
     // create window
     GLFWwindow* window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
@@ -62,7 +63,13 @@ int main(void)
     // window loop
     while (!glfwWindowShouldClose(window))
     {
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        
+        // swap front and back buffers
         glfwSwapBuffers(window);
+
+        // poll
         glfwPollEvents();
     }
 
