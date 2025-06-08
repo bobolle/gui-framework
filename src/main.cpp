@@ -1,12 +1,20 @@
 extern "C" {
-#include "lua.h"
-#include "lauxlib.h"
-#include "lualib.h"
+#include <lua.h>
+#include <lauxlib.h>
+#include <lualib.h>
 }
 
-#include "stdio.h"
-#include "stdlib.h"
+#include <stdio.h>
+#include <stdlib.h>
 #include <GLFW/glfw3.h>
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+    {
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
+    }
+}
 
 int main(void)
 {
@@ -35,8 +43,12 @@ int main(void)
         exit(1);
     }
 
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
+
     // create window
-    GLFWwindow *window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
+
     if (!window)
     {
         fprintf(stderr, "Failed to create window\n");
@@ -45,6 +57,7 @@ int main(void)
     }
 
     glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, key_callback);
 
     // window loop
     while (!glfwWindowShouldClose(window))

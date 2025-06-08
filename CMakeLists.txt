@@ -20,6 +20,6 @@ list(REMOVE_ITEM LUA_SRC
 add_library(lua STATIC ${LUA_SRC})
 target_include_directories(lua PUBLIC libs/lua)
 
-add_executable(eldenring_sc main.cpp)
+add_executable(eldenring_sc src/main.cpp)
 
 target_link_libraries(eldenring_sc glfw lua)
