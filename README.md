@@ -1,3 +1,4 @@
-# lua_app_test
+# gui-framework
 
-tinkering with embedded lua
+## goal
+* want to create a gui framework with embedded lua that I can use as a template for other

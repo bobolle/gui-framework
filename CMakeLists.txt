@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(eldenring_sc)
+project(gui_framework)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -23,11 +23,11 @@ list(REMOVE_ITEM LUA_SRC
 add_library(lua STATIC ${LUA_SRC})
 target_include_directories(lua PUBLIC libs/lua)
 
-add_executable(eldenring_sc src/main.cpp)
+add_executable(gui_framework src/main.cpp)
 
-target_include_directories(eldenring_sc PRIVATE "${GLAD_SOURCE_DIR}/include")
+target_include_directories(gui_framework PRIVATE "${GLAD_SOURCE_DIR}/include")
 
-target_link_libraries(eldenring_sc
+target_link_libraries(gui_framework
     PRIVATE
         OpenGL::GL
         glfw
