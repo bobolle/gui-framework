@@ -6,6 +6,10 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(OpenGL REQUIRED)
 find_package(glfw3 REQUIRED)
 
+set(GLAD_SOURCE_DIR "${PROJECT_SOURCE_DIR}/libs/glad/")
+add_subdirectory("${GLAD_SOURCE_DIR}/cmake" glad_cmake)
+glad_add_library(glad_gl_core_33 REPRODUCIBLE API gl:core=3.3)
+
 file(GLOB LUA_SRC
     libs/lua/*.c
 )
@@ -21,4 +25,12 @@ target_include_directories(lua PUBLIC libs/lua)
 
 add_executable(eldenring_sc src/main.cpp)
 
-target_link_libraries(eldenring_sc OpenGL::GL glfw lua)
+target_include_directories(eldenring_sc PRIVATE "${GLAD_SOURCE_DIR}/include")
+
+target_link_libraries(eldenring_sc
+    PRIVATE
+        OpenGL::GL
+        glfw
+        lua
+        glad_gl_core_33
+)
