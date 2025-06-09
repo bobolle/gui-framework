@@ -23,6 +23,7 @@ list(REMOVE_ITEM LUA_SRC
 add_library(lua STATIC ${LUA_SRC})
 target_include_directories(lua PUBLIC libs/lua)
 
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_executable(gui_framework src/main.cpp)
 
 target_include_directories(gui_framework PRIVATE "${GLAD_SOURCE_DIR}/include")
