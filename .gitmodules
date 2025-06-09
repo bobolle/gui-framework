@@ -1,3 +1,11 @@
 [submodule "libs/glad"]
 	path = libs/glad
 	url = https://github.com/Dav1dde/glad.git
+
+[submodule "libs/glfw"]
+	path = libs/glfw
+	url = https://github.com/glfw/glfw.git
+
+[submodule "libs/lua"]
+	path = libs/lua
+	url = https://github.com/lua/lua.git
