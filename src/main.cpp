@@ -5,13 +5,15 @@ extern "C" {
 }
 
 #include <string>
-#include <stdio.h>
+#include <iostream>
 #include <stdlib.h>
+#include <vector>
 #include <glad/gl.h>
-#include <GL/gl.h>
 #include <GLFW/glfw3.h>
 
 #include "Shader.hpp"
+#include "Widget.hpp"
+#include "Layout.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -37,7 +39,7 @@ static GLFWwindow* initWindow()
     // initialize GLFW
     if (!glfwInit())
     {
-        fprintf(stderr, "Failed to initialize GLFW\n");
+        std::cout <<  "Failed to initialize GLFW\n";
         exit(1);
     }
 
@@ -49,7 +51,7 @@ static GLFWwindow* initWindow()
     window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
     if (!window)
     {
-        fprintf(stderr, "Failed to create window\n");
+        std::cout << "Failed to create window\n";
         glfwTerminate();
         exit(1);
     }
@@ -62,7 +64,7 @@ static GLFWwindow* initWindow()
     int version = gladLoadGL(glfwGetProcAddress);
     if (version == 0)
     {
-        fprintf(stderr, "Failed to initialize OpenGL context\n");
+        std::cout << "Failed to initialize OpenGL context\n";
     }
 
     return window;
@@ -79,87 +81,31 @@ int lua_renderText(lua_State* L)
     return 0;
 }
 
-class Cursor {
-    public:
-        int x;
-        int y;
-        Cursor()
-        {
-            x = 0;
-            y = 0;
-        }
-};
-
-struct Color {
-    float r;
-    float g;
-    float b;
-    float a;
-};
-
-class Rectangle {
-    public:
-        int pos_x;
-        int pos_y;
-        unsigned int width;
-        unsigned int height;
-        Color color;
-        Rectangle(Cursor* cursor, unsigned int width, unsigned int height, Color color);
-        void render(unsigned int height);
-};
-
-Rectangle::Rectangle(Cursor* cursor, unsigned int width, unsigned int height, Color color)
+class Rectangle : public Widget
 {
-    this->pos_x = cursor->x;
-    this->pos_y = cursor->y;
-    this->width = width;
-    this->height = height;
-
-    this->color = color;
-
-    cursor->y += height;
-}
+        using Widget::Widget;
+    public:
+        void render(unsigned int height) override;
+};
 
 void Rectangle::render(unsigned int height)
 {
-    glScissor(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
-    glViewport(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
     glClearColor(this->color.r, this->color.g, this->color.b, this->color.a);
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-class Triangle {
-    public:
-        unsigned int* VAO;
-        int pos_x;
-        int pos_y;
-        unsigned int width;
-        unsigned int height;
-        Color color;
-        Triangle(Cursor* cursor, unsigned int* VAO, unsigned int width, unsigned int height, Color color);
-        void render(unsigned int height);
-};
-
-Triangle::Triangle(Cursor* cursor, unsigned int* VAO, unsigned int width, unsigned int height, Color color)
+class Triangle : public Widget
 {
-    this->pos_x = cursor->x;
-    this->pos_y = cursor->y;
-    this->width = width;
-    this->height = height;
-
-    this->color = color;
-    this->VAO = VAO;
-
-    cursor->y += height;
-}
+        using Widget::Widget;
+    public:
+        void render(unsigned int height) override;
+};
 
 void Triangle::render(unsigned int height)
 {
-    // do stuff
-    glScissor(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
-    glViewport(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
+
 
 int main(void)
 {
@@ -177,7 +123,7 @@ int main(void)
     status = luaL_loadfile(L, "script.lua");
     if (status)
     {
-        fprintf(stderr, "Couldn't load file: %s\n", lua_tostring(L, -1));
+        std::cout << "Couldn't load file: " << lua_tostring(L, -1) << std::endl;
         exit(1);
     }
 
@@ -229,22 +175,22 @@ int main(void)
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        Cursor cursor;
-        Rectangle rec(&cursor, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
-        Rectangle rec2(&cursor, 200, 200, {r: 1.0f, g: 1.0f, b: 0.0f, a: 1.0f});
-        rec.render(height);
-        rec2.render(height);
-
         shader.use();
         glBindVertexArray(VAO);
-        Triangle tri(&cursor, &VAO, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
-        tri.render(height);
-        Triangle tri2(&cursor, &VAO, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
-        tri2.render(height);
+
+        Layout layout;
+
+        Rectangle rec(&layout.cursor, 100, 100, {r: 0.3f, g: 0.5f, b: 0.2f, a: 1.0f});
+        Triangle tri(&layout.cursor, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
+        Triangle tri2(&layout.cursor, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
+
+        layout.pushWidget(&rec);
+        layout.pushWidget(&tri);
+        layout.pushWidget(&tri2);
+        layout.render(height);
         
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 
     glDeleteVertexArrays(1, &VAO);
