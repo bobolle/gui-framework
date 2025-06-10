@@ -7,3 +7,5 @@
 - [ ] labels, buttons
 - [ ] handle input
 - [ ] text rendering
+
+![preview](/resources/rec_tri_angles.png)
