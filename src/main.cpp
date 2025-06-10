@@ -22,14 +22,15 @@ const char* vertexShaderSource =
 const char* fragmentShaderSource =
     "#version 330 core\n"
     "out vec4 FragColor;\n"
+    "uniform vec4 objectColor;\n"
     "void main()\n"
     "{\n"
-    "   FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "   FragColor = objectColor;\n"
     "}\n\0";
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
-    glViewport(0, 0, width, height);
+    //glViewport(0, 0, width, height);
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -45,6 +46,43 @@ static void renderText(const std::string& text, float x, float y)
     printf("%s\n", text);
 }
 
+static GLFWwindow* initWindow()
+{
+    GLFWwindow* window;
+    // initialize GLFW
+    if (!glfwInit())
+    {
+        fprintf(stderr, "Failed to initialize GLFW\n");
+        exit(1);
+    }
+
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+
+    // create window
+    window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
+    if (!window)
+    {
+        fprintf(stderr, "Failed to create window\n");
+        glfwTerminate();
+        exit(1);
+    }
+
+    glfwMakeContextCurrent(window);
+
+    glfwSetKeyCallback(window, key_callback);
+    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+
+    int version = gladLoadGL(glfwGetProcAddress);
+    if (version == 0)
+    {
+        fprintf(stderr, "Failed to initialize OpenGL context\n");
+    }
+
+    return window;
+}
+
 int lua_renderText(lua_State* L)
 {
     const std::string text = luaL_checkstring(L, 1);
@@ -54,6 +92,55 @@ int lua_renderText(lua_State* L)
     renderText(text, x, y);
 
     return 0;
+}
+
+class Cursor {
+    public:
+        int x;
+        int y;
+        Cursor()
+        {
+            x = 0;
+            y = 0;
+        }
+};
+
+struct Color {
+    float r;
+    float g;
+    float b;
+    float a;
+};
+
+class Rectangle {
+    public:
+        int pos_x;
+        int pos_y;
+        unsigned int width;
+        unsigned int height;
+        Color color;
+        Rectangle(Cursor* cursor, int width, int height, Color color);
+        void render(int height);
+};
+
+Rectangle::Rectangle(Cursor* cursor, int width, int height, Color color)
+{
+    this->pos_x = cursor->x;
+    this->pos_y = cursor->y;
+    this->width = width;
+    this->height = height;
+
+    this->color = color;
+
+    cursor->y += height;
+}
+
+void Rectangle::render(int height)
+{
+    glScissor(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
+    glViewport(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
+    glClearColor(this->color.r, this->color.g, this->color.b, this->color.a);
+    glClear(GL_COLOR_BUFFER_BIT);
 }
 
 int main(void)
@@ -79,38 +166,8 @@ int main(void)
     // register functions
     lua_register(L, "renderText", lua_renderText);
 
-    // initialize GLFW
-    if (!glfwInit())
-    {
-        fprintf(stderr, "Failed to initialize GLFW\n");
-        exit(1);
-    }
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
     // create window
-    GLFWwindow* window = glfwCreateWindow(800, 600, "Test Window", nullptr, nullptr);
-
-    if (!window)
-    {
-        fprintf(stderr, "Failed to create window\n");
-        glfwTerminate();
-        exit(1);
-    }
-
-    glfwMakeContextCurrent(window);
-
-    glfwSetKeyCallback(window, key_callback);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
-    int version = gladLoadGL(glfwGetProcAddress);
-    if (version == 0)
-    {
-        fprintf(stderr, "Failed to initialize OpenGL context\n");
-    }
-
+    GLFWwindow* window = initWindow();
 
     // create and compile vertex shader
     unsigned int vertexShader;
@@ -162,9 +219,9 @@ int main(void)
 
     // vertices
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f, // left
-         0.5f, -0.5f, 0.0f, // right
-         0.0f, 0.5f, 0.0f,  // top
+        -1.0f, -1.0f, 0.0f, // left
+         1.0f, -1.0f, 0.0f, // right
+         0.0f,  1.0f, 0.0f,  // top
     };
 
     // Vertex Array Object and Vertex Buffer Object
@@ -186,17 +243,39 @@ int main(void)
 
     glBindVertexArray(0);
 
+    glEnable(GL_SCISSOR_TEST);
+
     // window loop
     while (!glfwWindowShouldClose(window))
     {
+        int width, height;
+        glfwGetWindowSize(window, &width, &height);
         // render
+        glViewport(0, 0, width, height);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // use shader program
-        glUseProgram(shaderProgram);
-        glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        // draw
+        //glViewport(0, height - 100, 100, 100);
+        //int colorLocation = glGetUniformLocation(shaderProgram, "objectColor");
+        //glUseProgram(shaderProgram);
+        //glUniform4f(colorLocation, 1.0f, 0.5f, 0.2f, 1.0f);
+        //glBindVertexArray(VAO);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        //glViewport(100, height - 100, 100, 100);
+        //glUniform4f(colorLocation, 1.0f, 0.0f, 0.2f, 1.0f);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        //glViewport(0, height - 200, 100, 100);
+        //glUniform4f(colorLocation, 0.2f, 0.0f, 1.0f, 1.0f);
+        //glDrawArrays(GL_TRIANGLES, 0, 3);
+
+        Cursor cursor;
+        Rectangle rec(&cursor, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
+        Rectangle rec2(&cursor, 200, 200, {r: 0.0f, g: 1.0f, b: 1.0f, a: 1.0f});
+        rec.render(height);
+        rec2.render(height);
         
         // swap front and back buffers
         glfwSwapBuffers(window);
