@@ -11,22 +11,7 @@ extern "C" {
 #include <GL/gl.h>
 #include <GLFW/glfw3.h>
 
-const char* vertexShaderSource = 
-    "#version 330 core\n"
-    "layout (location = 0) in vec3 aPos;\n"
-    "void main()\n"
-    "{\n"
-    "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-    "}\0";
-
-const char* fragmentShaderSource =
-    "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "uniform vec4 objectColor;\n"
-    "void main()\n"
-    "{\n"
-    "   FragColor = objectColor;\n"
-    "}\n\0";
+#include "Shader.hpp"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -119,11 +104,11 @@ class Rectangle {
         unsigned int width;
         unsigned int height;
         Color color;
-        Rectangle(Cursor* cursor, int width, int height, Color color);
-        void render(int height);
+        Rectangle(Cursor* cursor, unsigned int width, unsigned int height, Color color);
+        void render(unsigned int height);
 };
 
-Rectangle::Rectangle(Cursor* cursor, int width, int height, Color color)
+Rectangle::Rectangle(Cursor* cursor, unsigned int width, unsigned int height, Color color)
 {
     this->pos_x = cursor->x;
     this->pos_y = cursor->y;
@@ -135,12 +120,45 @@ Rectangle::Rectangle(Cursor* cursor, int width, int height, Color color)
     cursor->y += height;
 }
 
-void Rectangle::render(int height)
+void Rectangle::render(unsigned int height)
 {
     glScissor(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
     glViewport(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
     glClearColor(this->color.r, this->color.g, this->color.b, this->color.a);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+class Triangle {
+    public:
+        unsigned int* VAO;
+        int pos_x;
+        int pos_y;
+        unsigned int width;
+        unsigned int height;
+        Color color;
+        Triangle(Cursor* cursor, unsigned int* VAO, unsigned int width, unsigned int height, Color color);
+        void render(unsigned int height);
+};
+
+Triangle::Triangle(Cursor* cursor, unsigned int* VAO, unsigned int width, unsigned int height, Color color)
+{
+    this->pos_x = cursor->x;
+    this->pos_y = cursor->y;
+    this->width = width;
+    this->height = height;
+
+    this->color = color;
+    this->VAO = VAO;
+
+    cursor->y += height;
+}
+
+void Triangle::render(unsigned int height)
+{
+    // do stuff
+    glScissor(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
+    glViewport(this->pos_x, height - this->pos_y - this->height, this->width, this->height);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
 int main(void)
@@ -169,60 +187,15 @@ int main(void)
     // create window
     GLFWwindow* window = initWindow();
 
-    // create and compile vertex shader
-    unsigned int vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
-    glCompileShader(vertexShader);
-
-    int success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        fprintf(stderr, "ERROR::SHADER::VERTEX::COMPILATION_FAILED %s\n", infoLog);
-    }
-
-    // create and compile fragment shader
-    unsigned int fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
-    glCompileShader(fragmentShader);
-
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        fprintf(stderr, "ERROR::SHADER::VERTEX::COMPILATION_FAILED %s\n", infoLog);
-    }
-
-    // create shader program
-    unsigned int shaderProgram;
-    shaderProgram = glCreateProgram();
-
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
-    if (!success)
-    {
-        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
-        fprintf(stderr, "ERROR::SHADER::PROGRAM::LINK_FAILED %s\n", infoLog);
-    }
-
-    // cleanup shaders
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
     // vertices
     float vertices[] = {
         -1.0f, -1.0f, 0.0f, // left
          1.0f, -1.0f, 0.0f, // right
          0.0f,  1.0f, 0.0f,  // top
     };
+
+    // create Shader Program
+    Shader shader;
 
     // Vertex Array Object and Vertex Buffer Object
     unsigned int VAO, VBO;
@@ -241,7 +214,7 @@ int main(void)
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    glBindVertexArray(0);
+    //glBindVertexArray(0);
 
     glEnable(GL_SCISSOR_TEST);
 
@@ -251,43 +224,31 @@ int main(void)
         int width, height;
         glfwGetWindowSize(window, &width, &height);
         // render
+        glScissor(0, 0, width, height);
         glViewport(0, 0, width, height);
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        // draw
-        //glViewport(0, height - 100, 100, 100);
-        //int colorLocation = glGetUniformLocation(shaderProgram, "objectColor");
-        //glUseProgram(shaderProgram);
-        //glUniform4f(colorLocation, 1.0f, 0.5f, 0.2f, 1.0f);
-        //glBindVertexArray(VAO);
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        //glViewport(100, height - 100, 100, 100);
-        //glUniform4f(colorLocation, 1.0f, 0.0f, 0.2f, 1.0f);
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
-
-        //glViewport(0, height - 200, 100, 100);
-        //glUniform4f(colorLocation, 0.2f, 0.0f, 1.0f, 1.0f);
-        //glDrawArrays(GL_TRIANGLES, 0, 3);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         Cursor cursor;
         Rectangle rec(&cursor, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
-        Rectangle rec2(&cursor, 200, 200, {r: 0.0f, g: 1.0f, b: 1.0f, a: 1.0f});
+        Rectangle rec2(&cursor, 200, 200, {r: 1.0f, g: 1.0f, b: 0.0f, a: 1.0f});
         rec.render(height);
         rec2.render(height);
-        
-        // swap front and back buffers
-        glfwSwapBuffers(window);
 
-        // poll
+        shader.use();
+        glBindVertexArray(VAO);
+        Triangle tri(&cursor, &VAO, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
+        tri.render(height);
+        Triangle tri2(&cursor, &VAO, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
+        tri2.render(height);
+        
+        glfwSwapBuffers(window);
         glfwPollEvents();
 
     }
 
     glDeleteVertexArrays(1, &VAO);
     glDeleteBuffers(1, &VBO);
-    glDeleteProgram(shaderProgram);
 
     glfwDestroyWindow(window);
     glfwTerminate();
