@@ -3,7 +3,7 @@
 
 ## TODO
 - [x] complete graphics pipeline
-- [ ] render different figures
+- [x] render different figures
 - [ ] labels, buttons
 - [ ] handle input
 - [ ] text rendering
