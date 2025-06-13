@@ -28,9 +28,12 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     }
 }
 
-static void renderText(const std::string& text, float x, float y)
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    printf("%s\n", text);
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS)
+    {
+        //std::cout << "mouse left pressed\n";
+    }
 }
 
 static GLFWwindow* initWindow()
@@ -58,7 +61,10 @@ static GLFWwindow* initWindow()
 
     glfwMakeContextCurrent(window);
 
+    // event callbacks
     glfwSetKeyCallback(window, key_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
     int version = gladLoadGL(glfwGetProcAddress);
@@ -68,6 +74,11 @@ static GLFWwindow* initWindow()
     }
 
     return window;
+}
+
+static void renderText(const std::string& text, float x, float y)
+{
+    printf("%s\n", text);
 }
 
 int lua_renderText(lua_State* L)
@@ -106,11 +117,9 @@ void Triangle::render(unsigned int height)
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
-
 int main(void)
 {
-    int status, result, i;
-    double sum;
+    int status;
     lua_State *L;
 
     // holds all lua contexts
@@ -165,6 +174,7 @@ int main(void)
     glEnable(GL_SCISSOR_TEST);
 
     // window loop
+    InputState input_state;
     while (!glfwWindowShouldClose(window))
     {
         int width, height;
@@ -178,7 +188,7 @@ int main(void)
         shader.use();
         glBindVertexArray(VAO);
 
-        Layout layout;
+        Layout layout(&input_state);
 
         Rectangle rec(&layout.cursor, 100, 100, {r: 0.3f, g: 0.5f, b: 0.2f, a: 1.0f});
         Triangle tri(&layout.cursor, 100, 100, {r: 1.0f, g: 0.5f, b: 0.2f, a: 1.0f});
@@ -187,6 +197,8 @@ int main(void)
         layout.pushWidget(&rec);
         layout.pushWidget(&tri);
         layout.pushWidget(&tri2);
+
+        layout.handleInput(window);
         layout.render(height);
         
         glfwSwapBuffers(window);
