@@ -6,6 +6,6 @@
 - [x] render different figures
 - [ ] labels, buttons
 - [ ] handle input
-- [ ] text rendering
+- [x] text rendering
 
 ![preview](/resources/rec_tri_angles.png)
