@@ -1,11 +1,15 @@
 [submodule "libs/glad"]
 	path = libs/glad
 	url = https://github.com/Dav1dde/glad.git
-
 [submodule "libs/glfw"]
 	path = libs/glfw
 	url = https://github.com/glfw/glfw.git
-
 [submodule "libs/lua"]
 	path = libs/lua
 	url = https://github.com/lua/lua.git
+[submodule "libs/freetype"]
+	path = libs/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype
+[submodule "libs/glm"]
+	path = libs/glm
+	url = https://github.com/g-truc/glm.git
