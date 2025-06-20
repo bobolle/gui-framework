@@ -32,9 +32,9 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 add_executable(gui_framework
     src/main.cpp
     src/Shader.cpp
-    src/TextShader.cpp
     src/Widget.cpp
     src/Layout.cpp
+    src/Label.cpp
 )
 
 target_include_directories(gui_framework PUBLIC ${CMAKE_SOURCE_DIR}/include)

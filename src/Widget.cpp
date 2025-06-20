@@ -3,8 +3,11 @@
 
 #include "Widget.hpp"
 
-Widget::Widget(Cursor* cursor, unsigned int width, unsigned int height, Color color)
+Widget::Widget(Cursor* cursor, Shader* shader, GLuint* vbo, GLuint* vao, unsigned int width, unsigned int height, Color color)
 {
+    this->shader = shader;
+    this->VBO = vbo;
+    this->VAO = vao;
     this->color = color;
     this->bbox = {
         left: cursor->x,

@@ -4,7 +4,7 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
-Shader::Shader()
+Shader::Shader(const char* vertexShaderSource, const char* fragmentShaderSource)
 {
     unsigned int vertexShader;
     unsigned int fragmentShader;
