@@ -4,8 +4,10 @@
 ## TODO
 - [x] complete graphics pipeline
 - [x] render different figures
-- [ ] labels, buttons
-- [ ] handle input
+- [x] labels
+- [ ] buttons
+- [x] handle input
 - [x] text rendering
+- [ ] lua itegration
 
-![preview](/resources/rec_tri_angles.png)
+![preview](/resources/gui_framework_preview.png)
