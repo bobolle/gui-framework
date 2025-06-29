@@ -1,1 +1,3 @@
-renderText("testing", 100, 200)
+print('hello from script.lua')
+
+print("cadd: ", cadd(10, 10))

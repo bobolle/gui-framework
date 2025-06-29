@@ -172,8 +172,28 @@ void Triangle::render(unsigned int height)
     glDrawArrays(GL_TRIANGLES, 0, 3);
 }
 
+int luaFunction(lua_State* L)
+{
+    double a = luaL_checknumber(L, 1);
+    double b = luaL_checknumber(L, 2);
+    lua_pushnumber(L, a + b);
+    return 1;
+}
+
 int main(void)
 {
+    lua_State* L = luaL_newstate();
+    luaL_openlibs(L);
+
+    lua_register(L, "cadd", luaFunction);
+
+    if (luaL_dofile(L, "script.lua") != LUA_OK)
+    {
+        std::cerr << "Error: " << lua_tostring(L, -1) << std::endl;
+    }
+
+    lua_close(L);
+
     // create window
     GLFWwindow* window = initWindow();
 
